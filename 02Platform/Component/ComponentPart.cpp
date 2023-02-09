@@ -79,7 +79,7 @@ void ComponentPart::EndSequence(Event*pEvent) {
 	} else {
 		if (pEvent->IsSynchronous()) {
 			if (pEvent->GetCoundChildren() == 0) {
-				ReplyEvent(pEvent->GetPParent());
+				ReplyEvent(pEvent);
 			}
 		} else {
 			delete pEvent;	
@@ -99,15 +99,15 @@ void ComponentPart::SendAEvent(Event* pEvent) {
 			"EventQueue is not allocated"
 		);
 	}
+	if (m_pEventParent != nullptr) {
+		if (m_pEventParent->IsSynchronous()) {
+			// for nesting
+			pEvent->SetBNested(true);
+			pEvent->SetPParent(m_pEventParent);
+			pEvent->GetPParent()->IncrementCountChildren();
 
-	if (m_pEventParent->IsSynchronous()) {
-		// for nesting
-		pEvent->SetBNested(true);
-		pEvent->SetPParent(m_pEventParent);
-		pEvent->GetPParent()->IncrementCountChildren();
-
+		}
 	}
-	
 	pEvent->GetUIdTarget().GetPEventQueue()->PushBack(pEvent);
 	
 	// if (pEvent->IsSequential()) {
@@ -132,7 +132,9 @@ void ComponentPart::SendAEvent(Event* pEvent) {
 void ComponentPart::ReplyEvent(Event* pEvent, long long lArg, ValueObject* pArg) {
 	// set pEvent as a Reply
 	pEvent->SetBReply(true);
+	int nReplyType = pEvent->GetReplyType();
 	pEvent->SetReplyType(pEvent->GetType());
+	pEvent->SetType(nReplyType);
 	// swap source and destination
 	pEvent->SetUIdTarget(pEvent->GetUIdSource());
 	pEvent->SetUIdSource(*m_pUId);
