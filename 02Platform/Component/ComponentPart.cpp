@@ -55,6 +55,9 @@ void ComponentPart::BeginSequence(Event* pEvent) {
 	if (pEvent->IsReply()) {
 		// nested
 		if (pEvent->GetPParent() != nullptr) {
+			int nReplyType = pEvent->GetType();
+			pEvent->SetType(pEvent->GetPParent()->GetType());
+			pEvent->SetReplyType(nReplyType);
 			pEvent->GetPParent()->DecrementCountChildren();
 		}
 	} else {
@@ -132,9 +135,6 @@ void ComponentPart::SendAEvent(Event* pEvent) {
 void ComponentPart::ReplyEvent(Event* pEvent, long long lArg, ValueObject* pArg) {
 	// set pEvent as a Reply
 	pEvent->SetBReply(true);
-	int nReplyType = pEvent->GetReplyType();
-	pEvent->SetReplyType(pEvent->GetType());
-	pEvent->SetType(nReplyType);
 	// swap source and destination
 	pEvent->SetUIdTarget(pEvent->GetUIdSource());
 	pEvent->SetUIdSource(*m_pUId);
